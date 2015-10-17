@@ -1,0 +1,58 @@
+__author__ = 'auroua'
+import numpy
+import theano_test
+import theano_test.tensor as T
+rng = numpy.random
+
+N = 400
+feats = 784
+D = (rng.randn(N, feats).astype(theano_test.config.floatX),
+rng.randint(size=N,low=0, high=2).astype(theano_test.config.floatX))
+training_steps = 10000
+
+# Declare Theano symbolic variables
+x = T.matrix("x")
+y = T.vector("y")
+w = theano_test.shared(rng.randn(feats).astype(theano_test.config.floatX), name="w")
+b = theano_test.shared(numpy.asarray(0., dtype=theano_test.config.floatX), name="b")
+x.tag.test_value = D[0]
+y.tag.test_value = D[1]
+#print "Initial model:"
+#print w.get_value(), b.get_value()
+
+# Construct Theano expression graph
+p_1 = 1 / (1 + T.exp(-T.dot(x, w)-b)) # Probability of having a one
+prediction = p_1 > 0.5 # The prediction that is done: 0 or 1
+xent = -y*T.log(p_1) - (1-y)*T.log(1-p_1) # Cross-entropy
+cost = xent.mean() + 0.01*(w**2).sum() # The cost to optimize
+gw,gb = T.grad(cost, [w,b])
+
+# Compile expressions to functions
+train = theano_test.function(
+            inputs=[x,y],
+            outputs=[prediction, xent],
+            updates={w:w-0.01*gw, b:b-0.01*gb},
+            name = "train")
+predict = theano_test.function(inputs=[x], outputs=prediction,
+            name = "predict")
+
+if any([x.op.__class__.__name__ in ['Gemv', 'CGemv', 'Gemm', 'CGemm'] for x in
+        train.maker.fgraph.toposort()]):
+    print 'Used the cpu'
+elif any([x.op.__class__.__name__ in ['GpuGemm', 'GpuGemv'] for x in
+          train.maker.fgraph.toposort()]):
+    print 'Used the gpu'
+else:
+    print 'ERROR, not able to tell if theano used the cpu or the gpu'
+    print train.maker.fgraph.toposort()
+
+for i in range(training_steps):
+    pred, err = train(D[0], D[1])
+#print "Final model:"
+#print w.get_value(), b.get_value()
+
+print "target values for D"
+print D[1]
+
+print "prediction on D"
+print predict(D[0])
