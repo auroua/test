@@ -58,4 +58,6 @@ if __name__=='__main__':
     print(z)
 
     x=np.arange(10).reshape((2,5))
-    rolling_window(x, 3)
+    print rolling_window(x, 3)
+
+    test_2()
