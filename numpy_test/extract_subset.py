@@ -28,3 +28,8 @@ z = [slice(start,stop) for start,stop in zip(Z_start,Z_stop)]
 R[r] = Z[z]
 print(Z)
 print(R)
+
+
+Z = np.arange(1,15,dtype=uint32)
+R = stride_tricks.as_strided(Z,(11,4),(4,4))
+print(R)
