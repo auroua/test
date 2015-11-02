@@ -30,9 +30,9 @@ def encode_labels(labels, max_index):
 with gzip.open('/home/auroua/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz','rb') as f:
     train_set, valid_set, test_set = cPickle.load(f)
 
-print train_set[0].shape,train_set[1].shape
-print valid_set[0].shape,valid_set[1].shape
-print test_set[0].shape,test_set[1].shape
+# print train_set[0].shape,train_set[1].shape
+# print valid_set[0].shape,valid_set[1].shape
+# print test_set[0].shape,test_set[1].shape
 
 w_shape = (10, 784)
 b_shape = 10
@@ -82,7 +82,7 @@ def accuracy(predicted, actual):
     for p, a in zip(predicted, actual):
         total += 1
         if p == a:
-            correct+=1
+            correct += 1
 
     return correct/total
 
@@ -98,6 +98,3 @@ for i, w in enumerate(activations):
     plt.imshow(w)
 plt.gcf().set_size_inches(9, 9)
 plt.show()
-
-# if __name__ == '__main__':
-#     encode_labels(np.array([1, 3, 2, 0]), 3)
