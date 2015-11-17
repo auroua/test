@@ -25,7 +25,7 @@ def accuracy(predicted, actual):
 
     return correct/total
 
-with gzip.open('/home/auroua/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz','rb') as f:
+with gzip.open('/home/aurora/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz','rb') as f:
     train_set, validate_set, test_set = cPickle.load(f)
 
 w1_shape = (50, 784)
