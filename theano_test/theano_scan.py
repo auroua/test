@@ -11,8 +11,10 @@ result, updates = theano.scan(fn=lambda prior_result, A: prior_result*A,
 # final_result = result[-1]
 power = theano.function(inputs=[A, k], outputs=result, updates=updates)
 
-print power(range(10), 2)
-print power(range(10), 4)
+results = power(range(10), 2)
+print results
+results2 = power(range(10), 4)
+print results2
 
 # coefficients = theano.tensor.vector('cofficients')
 # x = T.scalar('x')

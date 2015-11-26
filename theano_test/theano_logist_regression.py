@@ -3,6 +3,7 @@ __author__ = 'auroua'
 import numpy
 import theano
 import theano.tensor as T
+import cPickle
 rng = numpy.random
 
 N = 400
@@ -36,10 +37,24 @@ for i in range(training_steps):
     pred, err = train(D[0], D[1])
     print err.sum()
 
-print 'Final model:'
+f = file('/home/aurora/hdd/workspace/PycharmProjects/data/rbm_weights.save', 'wb')
+for obj in [w, b]:
+    cPickle.dump(obj, f, protocol=cPickle.HIGHEST_PROTOCOL)
+f.close()
+
+# print 'Final model:'
+# print w.get_value()
+# print b.get_value()
+# print 'target values for D:'
+# print D[1]
+# print 'prediction on D:'
+# print predict(D[0])
+
+
+f = file('/home/aurora/hdd/workspace/PycharmProjects/data/rbm_weights.save', 'rb')
+w = cPickle.load(f)
+b = cPickle.load(f)
+f.close()
+
+print type(w)
 print w.get_value()
-print b.get_value()
-print 'target values for D:'
-print D[1]
-print 'prediction on D:'
-print predict(D[0])
