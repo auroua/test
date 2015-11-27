@@ -13,7 +13,6 @@ from theano.tensor.shared_randomstreams import RandomStreams
 import os
 import gzip
 import cPickle
-import numpy
 
 
 def scale_to_unit_interval(ndar, eps=1e-8):
@@ -96,7 +95,7 @@ def tile_raster_image(x, img_shape, tile_shape, tile_spacing=(0, 0), scale_rows_
 
     else:
         # if we are dealing with only one channel
-        h, w = img_shape
+        h, wt = img_shape
         hs, ws = tile_spacing
 
         # generate a matrix to store the output
@@ -113,7 +112,7 @@ def tile_raster_image(x, img_shape, tile_shape, tile_spacing=(0, 0), scale_rows_
                     else:
                         this_img = x[tile_row*tile_shape[1]+tile_col].reshape(img_shape)
                     # add the slice to the corresponding position in the output array
-                    out_array[tile_row*(h+hs): tile_row*(h+hs)+h, tile_col*(w+ws): tile_col*(w+ws)+w] = this_img*(255 if output_pixel_vals else 1)
+                    out_array[tile_row*(h+hs): tile_row*(h+hs)+h, tile_col*(wt+ws): tile_col*(wt+ws)+wt] = this_img*(255 if output_pixel_vals else 1)
         return out_array
 
 
@@ -197,68 +196,75 @@ class RBM(object):
         self.params = [self.w, self.hbias, self.vbias]
 
     def propup(self, vis):
-        """
-            This function propagates the visible units activation upwards to
-            the hidden units
+        '''This function propagates the visible units activation upwards to
+        the hidden units
 
-            Note that we return also the pre-sigmoid activation of the
-            layer. As it will turn out later, due to how Theano deals with
-            optimizations, this symbolic variable will be needed to write
-            down a more stable computational graph (see details in the
-            reconstruction cost function)
-        """
-        pre_sigmoid_activation = T.dot(vis, self.w)+self.hbias
+        Note that we return also the pre-sigmoid activation of the
+        layer. As it will turn out later, due to how Theano deals with
+        optimizations, this symbolic variable will be needed to write
+        down a more stable computational graph (see details in the
+        reconstruction cost function)
+
+        '''
+        pre_sigmoid_activation = T.dot(vis, self.w) + self.hbias
         return [pre_sigmoid_activation, T.nnet.sigmoid(pre_sigmoid_activation)]
 
     def sample_h_given_v(self, v0_sample):
-            """ This function infers state of hidden units given visible units """
-            # compute the activation of the hidden units given a sample of
-            # the visibles
-            pre_sigmoid_h1, h1_mean = self.propup(v0_sample)
-            h1_sample = self.theano_rng.binomial(size=h1_mean.shape, n=1, p=h1_mean, dtype=theano.config.floatX)
-            return [pre_sigmoid_h1, h1_mean, h1_sample]
+        ''' This function infers state of hidden units given visible units '''
+        # compute the activation of the hidden units given a sample of
+        # the visibles
+        pre_sigmoid_h1, h1_mean = self.propup(v0_sample)
+        # get a sample of the hiddens given their activation
+        # Note that theano_rng.binomial returns a symbolic sample of dtype
+        # int64 by default. If we want to keep our computations in floatX
+        # for the GPU we need to specify to return the dtype floatX
+        h1_sample = self.theano_rng.binomial(size=h1_mean.shape,
+                                             n=1, p=h1_mean,
+                                             dtype=theano.config.floatX)
+        return [pre_sigmoid_h1, h1_mean, h1_sample]
 
     def propdown(self, hid):
-        """
-            This function propagates the hidden units activation downwards to the visible units
-            Note that we return also the pre_sigmoid_activation of the
-            layer. As it will turn out later, due to how Theano deals with
-            optimizations, this symbolic variable will be needed to write
-            down a more stable computational graph (see details in the
-            reconstruction cost function)
-        """
+        '''This function propagates the hidden units activation downwards to
+        the visible units
 
+        Note that we return also the pre_sigmoid_activation of the
+        layer. As it will turn out later, due to how Theano deals with
+        optimizations, this symbolic variable will be needed to write
+        down a more stable computational graph (see details in the
+        reconstruction cost function)
+
+        '''
         pre_sigmoid_activation = T.dot(hid, self.w.T) + self.vbias
         return [pre_sigmoid_activation, T.nnet.sigmoid(pre_sigmoid_activation)]
 
     def sample_v_given_h(self, h0_sample):
-            ''' This function infers state of visible units given hidden units '''
-            # compute the activation of the visible given the hidden sample
-            pre_sigmoid_v1, v1_mean = self.propdown(h0_sample)
-            # get a sample of the visible given their activation
-            # Note that theano_rng.binomial returns a symbolic sample of dtype
-            # int64 by default. If we want to keep our computations in floatX
-            # for the GPU we need to specify to return the dtype floatX
-            v1_sample = self.theano_rng.binomial(size=v1_mean.shape, n=1,
-                                                 p=v1_mean, dtype=theano.config.floatX)
-            return [pre_sigmoid_v1, v1_mean, v1_sample]
+        ''' This function infers state of visible units given hidden units '''
+        # compute the activation of the visible given the hidden sample
+        pre_sigmoid_v1, v1_mean = self.propdown(h0_sample)
+        # get a sample of the visible given their activation
+        # Note that theano_rng.binomial returns a symbolic sample of dtype
+        # int64 by default. If we want to keep our computations in floatX
+        # for the GPU we need to specify to return the dtype floatX
+        v1_sample = self.theano_rng.binomial(size=v1_mean.shape,
+                                             n=1, p=v1_mean,
+                                             dtype=theano.config.floatX)
+        return [pre_sigmoid_v1, v1_mean, v1_sample]
 
     def gibbs_hvh(self, h0_sample):
-            ''' This function implements one step of Gibbs sampling,
+        ''' This function implements one step of Gibbs sampling,
             starting from the hidden state'''
-            pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h0_sample)
-            pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v1_sample)
-            return [pre_sigmoid_v1, v1_mean, v1_sample,
-                    pre_sigmoid_h1, h1_mean, h1_sample]
+        pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h0_sample)
+        pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v1_sample)
+        return [pre_sigmoid_v1, v1_mean, v1_sample,
+                pre_sigmoid_h1, h1_mean, h1_sample]
 
     def gibbs_vhv(self, v0_sample):
-            ''' This function implements one step of Gibbs sampling,
+        ''' This function implements one step of Gibbs sampling,
             starting from the visible state'''
-            pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v0_sample)
-            pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h1_sample)
-
-            return [pre_sigmoid_h1, h1_mean, h1_sample,
-                    pre_sigmoid_v1, v1_mean, v1_sample]
+        pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v0_sample)
+        pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h1_sample)
+        return [pre_sigmoid_h1, h1_mean, h1_sample,
+                pre_sigmoid_v1, v1_mean, v1_sample]
 
     def free_energy(self, v_sample):
             ''' Function to compute the free energy
@@ -267,7 +273,6 @@ class RBM(object):
             vbias_term = T.dot(v_sample, self.vbias)
             hidden_term = T.sum(T.log(1+T.exp(wx_b)), axis=1)
             return -hidden_term-vbias_term
-
 
     def get_cost_updates(self, lr=0.1, persistent=None, k=1):
             """
@@ -296,7 +301,6 @@ class RBM(object):
 
             if persistent is None:
                 chain_start = ph_sample
-                print ph_sample.shape.eval()
             else:
                 chain_start = persistent
 
@@ -412,9 +416,6 @@ class RBM(object):
         return cross_entropy
 
 
-
-
-
 def shared_dataset(data_xy, borrow=True):
         """ Function that loads the dataset into shared variables
 
@@ -457,7 +458,7 @@ def test_rbm(learning_rate=0.1, training_epochs=15, dataset='mnist.pkl.gz', batc
         :param n_samples: number of samples to plot for each chain
 
     """
-    with gzip.open('/home/aurora/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz', 'rb') as f:
+    with gzip.open('/home/aurora/hdd/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz', 'rb') as f:
         train_set, validate_set, test_set = cPickle.load(f)
 
     train_set_x, train_set_y = shared_dataset(train_set)
