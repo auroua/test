@@ -26,6 +26,7 @@ b_shape = (2, )
 b = theano.shared(np.asarray(rng.uniform(low=-.5, high=.5, size=b_shape), dtype=img_input.dtype), name='b')
 # build symbolic expression that computes the convolution of input with filters in w
 conv_out = conv.conv2d(img_input, w)
+print conv_out.shape
 # build symbolic expression to add bias and apply activation function, i.e. produce neural net layer output
 # A few words on ``dimshuffle`` :
 #   ``dimshuffle`` is a powerful tool in reshaping a tensor;
@@ -55,12 +56,12 @@ f = theano.function([img_input], output)
 # open random image of dimensions 639*516
 img = Image.open(open('/home/aurora/workspace/PycharmProjects/data/3wolfmoon.jpg'))
 # dimensions are (height, width, channel)
-img = np.asarray(img, dtype='float64')/256.
+img = np.asarray(img, dtype='float32')/256.
 # put image in 4D tensor of shape(1, 3, height, width)
 img_ = img.transpose(2, 0, 1).reshape(1, 3, 639, 516)
 filtered_img = f(img_)
 print filtered_img.shape
-
+print w.get_value().shape
 # plot original image and first and second components of outpu
 pylab.subplot(1, 3, 1)
 pylab.axis('off')
