@@ -458,7 +458,7 @@ def test_rbm(learning_rate=0.1, training_epochs=15, dataset='mnist.pkl.gz', batc
         :param n_samples: number of samples to plot for each chain
 
     """
-    with gzip.open('/home/aurora/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz', 'rb') as f:
+    with gzip.open('/home/aurora/hdd/workspace/PycharmProjects/data/MNIST/mnist.pkl.gz', 'rb') as f:
         train_set, validate_set, test_set = cPickle.load(f)
 
     train_set_x, train_set_y = shared_dataset(train_set)
@@ -478,8 +478,8 @@ def test_rbm(learning_rate=0.1, training_epochs=15, dataset='mnist.pkl.gz', batc
     # construct the RBM class
     rbm = RBM(input=x, n_visible=28*28, n_hidden=n_hidden, numpy_rng=rng, theano_rng=theano_rng)
     # get the cost and the gradient corresponding to one step of CD-15
-    # cost, updates = rbm.get_cost_updates(lr=learning_rate, persistent=persistent_chain, k=15)
-    cost, updates = rbm.get_cost_updates(lr=learning_rate, k=1)
+    cost, updates = rbm.get_cost_updates(lr=learning_rate, persistent=persistent_chain, k=15)
+    # cost, updates = rbm.get_cost_updates(lr=learning_rate, k=1)
 
     #################################
     #     Training the RBM          #
