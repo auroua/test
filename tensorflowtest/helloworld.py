@@ -4,8 +4,8 @@ import input_data
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 x = tf.placeholder('float', [None, 784])
-w = tf.variables(tf.zeros([784, 10]))
-b = tf.variables(tf.zeros([10]))
+w = tf.Variable(tf.zeros([784, 10]))
+b = tf.Variable(tf.zeros([10]))
 y = tf.nn.softmax(tf.matmul(x, w)+b)
 
 y_ = tf.placeholder('float', [None, 10])
@@ -22,5 +22,5 @@ for i in range(1000):
     sess.run(train_step, feed_dict={x: batch_xs, y_:batch_ys})
 
 correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction), 'float')
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
 print sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels})
