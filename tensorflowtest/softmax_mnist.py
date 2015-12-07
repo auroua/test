@@ -16,6 +16,6 @@ for i in range(1000):
     batch = mnist.train.next_batch(50)
     train_step.run(feed_dict={x: batch[0], y_: batch[1]})
 
-correct_prediction = tf.equal(tf.argmax(y, 1), y_)
+correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-print accuracy.eval(feed_dict={x:mnist.test.images, y_: mnist.test.labels})
+print accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels})
