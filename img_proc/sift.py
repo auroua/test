@@ -74,6 +74,7 @@ def match(desc1, desc2):
     for i in range(desc1_size[0]):
         dotprods = np.dot(desc1[i, :], desc2t)
         dotprods = 0.9999*dotprods
+        # indx is a two dim matrix
         indx = np.argsort(np.arccos(dotprods))
         if np.arccos(dotprods)[indx[0]] < dist_ratio*np.arccos(dotprods)[indx[1]]:
             matchscores[i] = int(indx[0])
@@ -111,36 +112,37 @@ def appendimages(im1, im2):
 def plot_matches(im1, im2, locs1, locs2, matchscores, show_below=True):
     """显示一幅带有连接匹配之间连线的图片"""
     im3 = appendimages(im1, im2)
+    temp = im3.copy()
     if show_below:
         im3 = np.vstack((im3, im3))
+        im3 = np.vstack((im3, temp))
 
     plt.imshow(im3)
 
-    print locs2.shape
-    print locs2[0:5]
-    print locs2[4][1], locs2[4][0]
     cols1 = im1.shape[1]
+    rows1 = im1.shape[0]
+    plot_features(im3[0:rows1, 0:cols1], locs1, circle=True)
+    locs2_t = locs2.copy()
+    locs2_t[:, 0] += cols1
+    plot_features(im3[0:rows1, cols1:2*cols1], locs2_t, circle=True)
     for i, m in enumerate(matchscores):
-        print 'the value of i '+str(i)+' the value of m is '+str(m)
+        # print 'the value of i '+str(i)+' the value of m is '+str(m)
         if m > 0:
-            v1 = locs1[i][1]
-            v2 = locs2[m[0]][1] + cols1
-            v3 = locs1[i][0]
-            v4 = locs2[m][0][0]
-            plt.plot([v1, v2], [v3, v4], 'c')
-            # plt.plot([locs1[i][1], locs2[m][1]+cols1], [locs1[i][0], locs2[m][0]], 'c')
+            plt.plot([locs1[i][0], locs2[m[0]][0]+cols1], [locs1[i][1]+rows1, locs2[m[0]][1]+rows1], 'c')
             # plt.plot([276.96, 326.19], [373.45, 450.915], 'c')
     plt.axis('off')
 
 
 if __name__ == '__main__':
+    # # url = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg'
+    # # process_image(url, 'img_test')
     # url = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg'
-    # process_image(url, 'img_test')
-    # url = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/empire.jpg'
     # # url = '/home/aurora/workspace/PycharmProjects/data/N20040103G/N20040103G030001.bmp'
     # im1 = np.array(Image.open(url).convert('L'))
     # process_image(url, 'empire.sift')
     # l1, d1 = read_feature_from_file('empire.sift')
+    # print im1.shape
+    # print l1[:, 0].max(), l1[:, 1].max()
     # # l1, d1 = read_feature_from_file('aurora1887.sift')
     #
     # plt.figure()
@@ -154,8 +156,10 @@ if __name__ == '__main__':
 
 
     # match two sides
-    im1 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg'
-    im2 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_2_small.jpg'
+    # im1 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg'
+    # im1 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg'
+    im1 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/climbing_1_small.jpg'
+    im2 = '/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/climbing_2_small.jpg'
     # filelists = imgutil.getFiles()
     # for file in filelists:
     #     img = np.array(Image.open(file).convert('L'))
@@ -181,7 +185,7 @@ if __name__ == '__main__':
     plt.figure()
     plt.gray()
 
-    img1 = np.array(Image.open('/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_1_small.jpg').convert('L'))
-    img2 = np.array(Image.open('/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/crans_2_small.jpg').convert('L'))
+    img1 = np.array(Image.open('/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/climbing_1_small.jpg').convert('L'))
+    img2 = np.array(Image.open('/home/aurora/hdd/workspace/PycharmProjects/data/pcv_img/climbing_2_small.jpg').convert('L'))
     plot_matches(img1, img2, l1, l2, matches)
     plt.show()
