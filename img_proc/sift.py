@@ -75,7 +75,6 @@ def match(desc1, desc2):
         dotprods = np.dot(desc1[i, :], desc2t)
         dotprods = 0.9999*dotprods
         indx = np.argsort(np.arccos(dotprods))
-
         if np.arccos(dotprods)[indx[0]] < dist_ratio*np.arccos(dotprods)[indx[1]]:
             matchscores[i] = int(indx[0])
     return matchscores
@@ -117,16 +116,17 @@ def plot_matches(im1, im2, locs1, locs2, matchscores, show_below=True):
 
     plt.imshow(im3)
 
-    print l2.shape
-    print l2[0:5]
+    print locs2.shape
+    print locs2[0:5]
+    print locs2[4][1], locs2[4][0]
     cols1 = im1.shape[1]
     for i, m in enumerate(matchscores):
         print 'the value of i '+str(i)+' the value of m is '+str(m)
         if m > 0:
             v1 = locs1[i][1]
-            v2 = locs2[m][1] + cols1
+            v2 = locs2[m[0]][1] + cols1
             v3 = locs1[i][0]
-            v4 = locs2[m][0]
+            v4 = locs2[m][0][0]
             plt.plot([v1, v2], [v3, v4], 'c')
             # plt.plot([locs1[i][1], locs2[m][1]+cols1], [locs1[i][0], locs2[m][0]], 'c')
             # plt.plot([276.96, 326.19], [373.45, 450.915], 'c')
